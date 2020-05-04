@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Find My Phone</string>
+    <string name="my_trackers_activity_label">Contact</string>
+    <string name="login_activity_label">Login</string>
+    <string name="phone_number_text">Phone number</string>
+    <string name="name_text">Name</string>
+    <string name="register_btn_text">Register</string>
+    <string name="edit_text_enter_phone_number_hint_text">Enter your phone number</string>
+    <string name="menu_item_add_tracker_text">Add tracker</string>
+    <string name="menu_item_help_text">Help</string>
+    <string name="menu_item_finish_text">Finish</string>
+    <string name="menu_item_add_contact_text">Add contact</string>
+</resources>
