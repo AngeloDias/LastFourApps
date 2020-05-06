@@ -13,6 +13,8 @@ import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import com.google.firebase.database.FirebaseDatabase
+import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.android.synthetic.main.activity_my_trackers_people.*
 import kotlinx.android.synthetic.main.contact_ticket.view.*
 
@@ -32,10 +34,15 @@ class MyTrackersPeopleActivity : AppCompatActivity() {
         listViewContact.adapter = contactsAdapter
         listViewContact.onItemClickListener = AdapterView.OnItemClickListener { adapterView, view, i, id ->
             val userInfo = listOfContacts[i]
+            val mDatabaseRef = FirebaseDatabase.getInstance().reference
 
             UserData.myTrackers.remove(userInfo.phoneNumber)
             userData!!.saveContactInfo()
             refreshData()
+
+            mDatabaseRef.child(LoginActivity.userDBChildPath).child(userInfo.phoneNumber)
+                .child(LoginActivity.findingDBChildPath).child(userData!!.loadPhoneNumber())
+                .removeValue()
         }
 
         userData!!.loadContactInfo()
@@ -112,12 +119,19 @@ class MyTrackersPeopleActivity : AppCompatActivity() {
 
                             val phoneNumber = phonesCursor.getString(phonesCursor.getColumnIndex("data1"))
                             val name = contactsCursor.getString(contactsCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
-
                             val cleanPhoneNumber = UserData.formatPhoneNumber(phoneNumber)
                             UserData.myTrackers[cleanPhoneNumber] = name
 
                             refreshData()
                             phonesCursor.close()
+                            userData!!.saveContactInfo()
+
+                            val userData = UserData(applicationContext)
+                            val mDatabaseRef = FirebaseDatabase.getInstance().reference
+
+                            mDatabaseRef.child(LoginActivity.userDBChildPath).child(cleanPhoneNumber)
+                                .child(LoginActivity.findingDBChildPath).child(userData.loadPhoneNumber())
+                                .setValue(true)
                         }
                     }
 
