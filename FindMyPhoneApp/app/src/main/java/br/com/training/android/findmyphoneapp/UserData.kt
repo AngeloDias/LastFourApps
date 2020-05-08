@@ -35,7 +35,7 @@ class UserData(var context: Context) {
             if(listOfTrackers.isEmpty()) {
                 listOfTrackers = "$key%$value"
             } else {
-                listOfTrackers += "$key%$value"
+                listOfTrackers += "%$key%$value"
             }
         }
 

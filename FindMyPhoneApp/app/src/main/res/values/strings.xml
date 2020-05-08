@@ -10,4 +10,5 @@
     <string name="menu_item_help_text">Help</string>
     <string name="menu_item_finish_text">Finish</string>
     <string name="menu_item_add_contact_text">Add contact</string>
+    <string name="no_data_available_text">No data available</string>
 </resources>
