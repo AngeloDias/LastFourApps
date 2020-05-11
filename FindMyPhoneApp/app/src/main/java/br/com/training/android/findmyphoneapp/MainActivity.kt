@@ -1,8 +1,12 @@
 package br.com.training.android.findmyphoneapp
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -15,16 +19,26 @@ import android.widget.BaseAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import br.com.training.android.findmyphoneapp.LoginActivity.Companion.requestingDBChildPath
+import br.com.training.android.findmyphoneapp.LoginActivity.Companion.userDBChildPath
 import com.google.firebase.database.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.contact_ticket.view.*
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class MainActivity : AppCompatActivity() {
     private var listOfContacts = ArrayList<UserContact>()
     private var contactsAdapter: ContactMainAdapter? = null
     private var dbReference: DatabaseReference? = null
-    private val _contactCode = 178
+    private val _contactRequestCode = 178
+    private val _locationRequestCode = 112
     private var hashListOfContacts = HashMap<String, String>()
+    private var myLocation: Location? = null
+    private var isAccessLocation = false
+    private val locationDBChildPath = "location"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,7 +59,13 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         refreshUsers()
-        checkPermission()
+
+        if(isAccessLocation) {
+            return
+        }
+
+        checkContactPermission()
+        checkLocationPermission()
     }
 
     private fun refreshUsers() {
@@ -55,7 +75,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        dbReference!!.child(LoginActivity.userDBChildPath).child(userData.loadPhoneNumber())
+        dbReference!!.child(userDBChildPath).child(userData.loadPhoneNumber())
             .child(LoginActivity.findingDBChildPath).addValueEventListener(
                 object : ValueEventListener {
                     override fun onCancelled(p0: DatabaseError) {}
@@ -101,10 +121,10 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun checkPermission() {
+    private fun checkContactPermission() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-            ActivityCompat.checkSelfPermission(applicationContext, android.Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(android.Manifest.permission.READ_CONTACTS), _contactCode)
+            ActivityCompat.checkSelfPermission(applicationContext, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS), _contactRequestCode)
         }
 
         loadContact()
@@ -134,11 +154,19 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         when(requestCode) {
-            _contactCode -> {
+            _contactRequestCode -> {
                 if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     loadContact()
                 } else {
                     Toast.makeText(applicationContext, "Cannot access to contact", Toast.LENGTH_LONG).show()
+                }
+            }
+
+            _locationRequestCode -> {
+                if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    getUserLocation()
+                } else {
+                    Toast.makeText(applicationContext, "Cannot access location", Toast.LENGTH_LONG).show()
                 }
             }
 
@@ -173,6 +201,72 @@ class MainActivity : AppCompatActivity() {
         override fun getCount(): Int {
             return contacts.size
         }
+    }
+
+    private fun checkLocationPermission() {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+            ActivityCompat.checkSelfPermission(applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), _locationRequestCode)
+        }
+
+        getUserLocation()
+    }
+
+    private fun getUserLocation() {
+        val myUserLocation = MyLocationListener()
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val userData = UserData(applicationContext)
+        val myPhoneNumber = userData.loadPhoneNumber()
+        val dateFormat = SimpleDateFormat("yyyy/MMM/dd HH:MM:ss")
+        val date = Date()
+
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return
+        }
+
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3, 3f, myUserLocation)
+
+        dbReference!!.child(userDBChildPath).child(myPhoneNumber)
+            .child(requestingDBChildPath).addValueEventListener(
+                object: ValueEventListener {
+                    override fun onCancelled(p0: DatabaseError) {}
+
+                    override fun onDataChange(p0: DataSnapshot) {
+                        dbReference!!.child(userDBChildPath).child(myPhoneNumber)
+                            .child(locationDBChildPath).child("latitude")
+                            .setValue(myLocation!!.latitude)
+                        dbReference!!.child(userDBChildPath).child(myPhoneNumber)
+                            .child(locationDBChildPath).child("longitude")
+                            .setValue(myLocation!!.longitude)
+                        dbReference!!.child(userDBChildPath).child(myPhoneNumber)
+                            .child(locationDBChildPath).child("lastOnline")
+                            .setValue(dateFormat.format(date).toString())
+                    }
+
+                })
+    }
+
+    inner class MyLocationListener: LocationListener {
+
+        init {
+            isAccessLocation = true
+            myLocation = Location("me")
+
+            myLocation!!.longitude = 0.0
+            myLocation!!.latitude = 0.0
+        }
+
+        override fun onLocationChanged(p0: Location?) {
+            myLocation = p0
+        }
+
+        override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {}
+
+        override fun onProviderEnabled(p0: String?) {}
+
+        override fun onProviderDisabled(p0: String?) {}
+
     }
 
 }
