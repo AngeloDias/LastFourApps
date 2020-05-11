@@ -2,14 +2,19 @@ package br.com.training.android.findmyphoneapp
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.BaseAdapter
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import com.google.firebase.database.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.contact_ticket.view.*
@@ -18,6 +23,8 @@ class MainActivity : AppCompatActivity() {
     private var listOfContacts = ArrayList<UserContact>()
     private var contactsAdapter: ContactMainAdapter? = null
     private var dbReference: DatabaseReference? = null
+    private val _contactCode = 178
+    private var hashListOfContacts = HashMap<String, String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,7 +32,7 @@ class MainActivity : AppCompatActivity() {
         dbReference = FirebaseDatabase.getInstance().reference
         val userData = UserData(this)
 
-        userData.loadPhoneNumber()
+        userData.isFirstLoad()
 
         contactsAdapter = ContactMainAdapter(applicationContext, listOfContacts)
         listViewMainContact.adapter = contactsAdapter
@@ -33,12 +40,12 @@ class MainActivity : AppCompatActivity() {
             val userInfo = listOfContacts[i]
 
         }
-
     }
 
     override fun onResume() {
         super.onResume()
         refreshUsers()
+        checkPermission()
     }
 
     private fun refreshUsers() {
@@ -59,7 +66,7 @@ class MainActivity : AppCompatActivity() {
                         listOfContacts.clear()
 
                         for(key in tableMap.values) {
-                            listOfContacts.add(UserContact("no_name", key as String))
+                            listOfContacts.add(UserContact(hashListOfContacts[key]!!, key as String))
                         }
 
                         contactsAdapter!!.notifyDataSetChanged()
@@ -92,6 +99,54 @@ class MainActivity : AppCompatActivity() {
         }
 
         return true
+    }
+
+    private fun checkPermission() {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+            ActivityCompat.checkSelfPermission(applicationContext, android.Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(android.Manifest.permission.READ_CONTACTS), _contactCode)
+        }
+
+        loadContact()
+    }
+
+    private fun loadContact(){
+        hashListOfContacts.clear()
+
+        val contactsCursor = contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            null, null, null, null)
+        contactsCursor!!.moveToFirst()
+
+        do {
+            val name = contactsCursor.getString(contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME))
+            val phoneNumber = contactsCursor.getString(contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+
+            hashListOfContacts[UserData.formatPhoneNumber(phoneNumber)] = name
+
+        } while (contactsCursor.moveToNext())
+
+        contactsCursor.close()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        when(requestCode) {
+            _contactCode -> {
+                if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    loadContact()
+                } else {
+                    Toast.makeText(applicationContext, "Cannot access to contact", Toast.LENGTH_LONG).show()
+                }
+            }
+
+            else -> {
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+            }
+        }
+
     }
 
     inner class ContactMainAdapter(var context: Context, var contacts: ArrayList<UserContact>): BaseAdapter() {
