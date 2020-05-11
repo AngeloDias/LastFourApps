@@ -71,18 +71,18 @@ class UserData(var context: Context) {
         editor.apply()
     }
 
-    fun loadPhoneNumber(): String {
-        var phoneNumber = sharedPreferences.getString(editorPhoneNumberKey, "")
+    fun isFirstLoad() {
+        val phoneNumber = sharedPreferences.getString(editorPhoneNumberKey, "")
 
         if(phoneNumber == "") {
             val intent = Intent(context, LoginActivity::class.java)
 
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
-        } else if(phoneNumber == null) {
-            phoneNumber = ""
         }
+    }
 
-        return phoneNumber
+    fun loadPhoneNumber(): String {
+        return sharedPreferences.getString(editorPhoneNumberKey, "") ?: ""
     }
 }
