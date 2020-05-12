@@ -4,9 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -36,8 +33,6 @@ class MainActivity : AppCompatActivity() {
     private val _contactRequestCode = 178
     private val _locationRequestCode = 112
     private var hashListOfContacts = HashMap<String, String>()
-    private var myLocation: Location? = null
-    private var isAccessLocation = false
 
     companion object {
         const val locationDBChildPath = "location"
@@ -75,7 +70,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         refreshUsers()
 
-        if(isAccessLocation) {
+        if(MyService.isServiceRunning) {
             return
         }
 
@@ -146,21 +141,29 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadContact(){
-        hashListOfContacts.clear()
+        try {
+            hashListOfContacts.clear()
 
-        val contactsCursor = contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-            null, null, null, null)
-        contactsCursor!!.moveToFirst()
+            val contactsCursor = contentResolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                null, null, null, null
+            )
+            contactsCursor!!.moveToFirst()
 
-        do {
-            val name = contactsCursor.getString(contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME))
-            val phoneNumber = contactsCursor.getString(contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+            do {
+                val name =
+                    contactsCursor.getString(contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME))
+                val phoneNumber =
+                    contactsCursor.getString(contactsCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
 
-            hashListOfContacts[UserData.formatPhoneNumber(phoneNumber)] = name
+                hashListOfContacts[UserData.formatPhoneNumber(phoneNumber)] = name
 
-        } while (contactsCursor.moveToNext())
+            } while (contactsCursor.moveToNext())
 
-        contactsCursor.close()
+            contactsCursor.close()
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -228,60 +231,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getUserLocation() {
-        val myUserLocation = MyLocationListener()
-        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val userData = UserData(applicationContext)
-        val myPhoneNumber = userData.loadPhoneNumber()
-        val dateFormat = SimpleDateFormat("yyyy/MMM/dd HH:MM:ss")
-        val date = Date()
+        if(!MyService.isServiceRunning) {
+            val intent = Intent(baseContext, MyService::class.java)
 
-        if (ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return
+            startService(intent)
         }
-
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3, 3f, myUserLocation)
-
-        dbReference!!.child(userDBChildPath).child(myPhoneNumber)
-            .child(requestingDBChildPath).addValueEventListener(
-                object: ValueEventListener {
-                    override fun onCancelled(p0: DatabaseError) {}
-
-                    override fun onDataChange(p0: DataSnapshot) {
-                        dbReference!!.child(userDBChildPath).child(myPhoneNumber)
-                            .child(locationDBChildPath).child(latitudePath)
-                            .setValue(myLocation!!.latitude)
-                        dbReference!!.child(userDBChildPath).child(myPhoneNumber)
-                            .child(locationDBChildPath).child(longitudePath)
-                            .setValue(myLocation!!.longitude)
-                        dbReference!!.child(userDBChildPath).child(myPhoneNumber)
-                            .child(locationDBChildPath).child(lastOnlinePath)
-                            .setValue(dateFormat.format(date).toString())
-                    }
-
-                })
-    }
-
-    inner class MyLocationListener: LocationListener {
-
-        init {
-            isAccessLocation = true
-            myLocation = Location("me")
-
-            myLocation!!.longitude = 0.0
-            myLocation!!.latitude = 0.0
-        }
-
-        override fun onLocationChanged(p0: Location?) {
-            myLocation = p0
-        }
-
-        override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {}
-
-        override fun onProviderEnabled(p0: String?) {}
-
-        override fun onProviderDisabled(p0: String?) {}
-
     }
 
 }

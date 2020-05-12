@@ -47,7 +47,6 @@ class LoginActivity : AppCompatActivity() {
         mAuth!!.signInAnonymously().addOnCompleteListener(this) { task ->
             if (task.isSuccessful) {
                 Toast.makeText(baseContext, "Authentication successful.", Toast.LENGTH_SHORT).show()
-//                val user = mAuth!!.currentUser
 
             } else {
                 // If sign in fails, display a message to the user.
