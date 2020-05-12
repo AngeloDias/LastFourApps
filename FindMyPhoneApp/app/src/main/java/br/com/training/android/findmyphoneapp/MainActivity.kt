@@ -38,7 +38,14 @@ class MainActivity : AppCompatActivity() {
     private var hashListOfContacts = HashMap<String, String>()
     private var myLocation: Location? = null
     private var isAccessLocation = false
-    private val locationDBChildPath = "location"
+
+    companion object {
+        const val locationDBChildPath = "location"
+        const val phoneExtraToActivity = "phoneNumber"
+        const val latitudePath = "latitude"
+        const val longitudePath = "longitude"
+        const val lastOnlinePath = "lastOnline"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +59,14 @@ class MainActivity : AppCompatActivity() {
         listViewMainContact.adapter = contactsAdapter
         listViewMainContact.onItemClickListener = AdapterView.OnItemClickListener { adapterView, view, i, id ->
             val userInfo = listOfContacts[i]
+            val dateFormat = SimpleDateFormat("yyyy/MMM/dd HH:MM:ss")
+            val date = Date()
+            val intent = Intent(applicationContext, MapsActivity::class.java)
+
+            dbReference!!.child(userDBChildPath).child(userInfo.phoneNumber)
+                .child(requestingDBChildPath).setValue(dateFormat.format(date).toString())
+            intent.putExtra(phoneExtraToActivity, userInfo.phoneNumber)
+            startActivity(intent)
 
         }
     }
@@ -234,13 +249,13 @@ class MainActivity : AppCompatActivity() {
 
                     override fun onDataChange(p0: DataSnapshot) {
                         dbReference!!.child(userDBChildPath).child(myPhoneNumber)
-                            .child(locationDBChildPath).child("latitude")
+                            .child(locationDBChildPath).child(latitudePath)
                             .setValue(myLocation!!.latitude)
                         dbReference!!.child(userDBChildPath).child(myPhoneNumber)
-                            .child(locationDBChildPath).child("longitude")
+                            .child(locationDBChildPath).child(longitudePath)
                             .setValue(myLocation!!.longitude)
                         dbReference!!.child(userDBChildPath).child(myPhoneNumber)
-                            .child(locationDBChildPath).child("lastOnline")
+                            .child(locationDBChildPath).child(lastOnlinePath)
                             .setValue(dateFormat.format(date).toString())
                     }
 
