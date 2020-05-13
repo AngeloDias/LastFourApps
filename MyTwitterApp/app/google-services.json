@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1056753265976",
+    "firebase_url": "https://mytwitterapp-fcb88.firebaseio.com",
+    "project_id": "mytwitterapp-fcb88",
+    "storage_bucket": "mytwitterapp-fcb88.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1056753265976:android:cfe443f14e3e584324a5cd",
+        "android_client_info": {
+          "package_name": "br.com.training.android.mytwitterapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1056753265976-ulc3eh5o29bhvk4ckuaa6ila555ersa8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoWLDqsu3mhbv7N0lorOpOsCxZKVY4B1o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1056753265976-ulc3eh5o29bhvk4ckuaa6ila555ersa8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

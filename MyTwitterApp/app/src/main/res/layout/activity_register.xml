@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    tools:context=".RegisterActivity">
+
+    <EditText
+        android:id="@+id/editTextName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10pt"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:gravity="center"
+        android:hint="@string/enter_name_txt" />
+
+    <EditText
+        android:id="@+id/editTextEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10pt"
+        android:ems="10"
+        android:hint="@string/enter_email_txt"
+        android:gravity="center"
+        android:inputType="textEmailAddress" />
+
+    <EditText
+        android:id="@+id/editTextPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10pt"
+        android:ems="10"
+        android:hint="@string/enter_your_password_txt"
+        android:gravity="center"
+        android:inputType="textPassword" />
+
+    <ImageView
+        android:id="@+id/imgViewPerson"
+        android:layout_width="80pt"
+        android:layout_height="100pt"
+        app:srcCompat="@drawable/personIcon" />
+
+    <Button
+        android:id="@+id/btnRegister"
+        android:layout_width="50pt"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bu_color"
+        android:text="@string/register_txt" />
+
+</LinearLayout>
