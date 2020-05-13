@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import kotlinx.android.synthetic.main.activity_login.*
+import kotlinx.android.synthetic.main.activity_register.*
 
 class LoginActivity : AppCompatActivity() {
 
@@ -15,6 +16,7 @@ class LoginActivity : AppCompatActivity() {
         btnRegisterAccount.setOnClickListener {
             startActivity(Intent(applicationContext, RegisterActivity::class.java))
         }
+
     }
 
 }
