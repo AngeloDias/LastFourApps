@@ -6,17 +6,23 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
+import android.os.AsyncTask
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import br.com.training.android.mytwitterapp.Operations.Companion.convertStreamToString
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.android.synthetic.main.activity_register.*
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -34,7 +40,10 @@ class RegisterActivity : AppCompatActivity() {
 
         signInAnonymously()
 
-        btnRegister.setOnClickListener {}
+        btnRegister.setOnClickListener {
+            it.isEnabled = false
+            saveImageInFirebase()
+        }
         imgViewPerson.setOnClickListener {}
     }
 
@@ -120,7 +129,51 @@ class RegisterActivity : AppCompatActivity() {
         uploadTask.addOnFailureListener {
             Toast.makeText(this, "Fail to upload image", Toast.LENGTH_LONG).show()
         }.addOnSuccessListener {taskSnapshot ->
+            var downloadUrl = URLEncoder.encode(taskSnapshot.storage.downloadUrl.toString(), "utf-8")
+            val name = URLEncoder.encode(editTextName.text.toString(), "utf-8")
+            val url = "http://"
+
+            MyAsyncTask().execute(url)
+        }
+
+    }
+
+    inner class MyAsyncTask() : AsyncTask<String, String, String>() {
+
+        override fun onProgressUpdate(vararg values: String?) {
+
+            try {
+                val json = JSONObject(values[0])
+
+                Toast.makeText(applicationContext, json.getString("msg"), Toast.LENGTH_LONG).show()
+
+                if(json.getString("msg") == "user is added") {
+                    finish()
+                } else {
+                    btnRegister.isEnabled = true
+                }
+
+            } catch (ex: Exception) {
+                ex.printStackTrace()
+            }
 
         }
+
+        override fun doInBackground(vararg p0: String?): String {
+            try {
+                val url = URL(p0[0])
+                val urlConnect = url.openConnection() as HttpURLConnection
+
+                urlConnect.connectTimeout = 7000
+
+                var streamInString = convertStreamToString(urlConnect.inputStream)
+
+                publishProgress(streamInString)
+
+            } catch (e:Exception) {}
+
+            return "Success"
+        }
+
     }
 }
