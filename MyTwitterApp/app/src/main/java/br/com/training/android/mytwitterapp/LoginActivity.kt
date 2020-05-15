@@ -39,8 +39,11 @@ class LoginActivity : AppCompatActivity() {
                     val userInfo = JSONArray(json.getString("info"))
                     val userCredentials = userInfo.getJSONObject(0)
                     val userId = userCredentials.getString("user_id")
+                    val saveSettings = SaveSettings(applicationContext)
 
                     Toast.makeText(applicationContext, userCredentials.getString("first_name"), Toast.LENGTH_LONG).show()
+                    saveSettings.saveSettings(userId)
+                    finish()
                 }
 
             } catch (ex: Exception) {

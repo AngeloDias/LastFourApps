@@ -5,4 +5,9 @@
     <string name="enter_email_txt">Enter your e-mail</string>
     <string name="enter_name_txt">Enter your name</string>
     <string name="login_txt">Login</string>
+    <string name="question_think_txt">What you thinking?</string>
+    <string name="text_sample_to_tweet">Love new twitter feathers, looking forward for new…</string>
+    <string name="user_name_txt">Username</string>
+    <string name="home_page_title">Home page</string>
+    <string name="search_item_search">Search</string>
 </resources>
